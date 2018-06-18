@@ -15,8 +15,7 @@ public class BouncingBall extends JPanel{
 	private static final int BOX_HEIGHT = 300; // 전체 높이
 	private float ballRadius = 20; // 공의 반지름
 	private float ballX = ballRadius + 120; // 공의 초기 X위치
-	private float ballY = ballRadius + 80; // 공의 초기 Y위치
-	private float ballSpeedX = 10; // 공의 X속도
+	private float ballY = ballRadius + 80; // 공의 초기 Y위
 	private float ballSpeedY = 10; // 공의 Y속도
 	private JButton play; // 시작버튼
 	private JButton stop; // 중지버튼
@@ -49,12 +48,12 @@ public class BouncingBall extends JPanel{
 		public void run() { // 수행하여야 하는 작업을 적어줌
 			while (true) {
 				ballY += ballSpeedY;
-				if (ballY - ballRadius < 0) {
-					ballSpeedY = -ballSpeedY;
-					ballY = ballRadius;
-				} else if (ballY + ballRadius > BOX_HEIGHT) {
+				if (ballY - ballRadius > BOX_HEIGHT - ballRadius) {
 					ballSpeedY = -ballSpeedY;
 					ballY = BOX_HEIGHT - ballRadius;
+				} else if (ballY - ballRadius < 220) {
+					ballSpeedY = -ballSpeedY;
+					ballY = 240;
 				}
 				if (isPlay) // isPlay 변수가 true이면
 					repaint(); // 그린다.
@@ -65,6 +64,8 @@ public class BouncingBall extends JPanel{
 			}
 		}
 	}
+
+	
 	Thread t = new MyThread(); // 스레드 객체 생성
 	t.start(); // 스레드 시작
 	}
