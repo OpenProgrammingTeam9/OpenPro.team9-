@@ -1,9 +1,10 @@
-package OpenSourceTeam;
+package OpenSource;
 
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JViewport;
+import javax.swing.Timer;
 
 import java.awt.Color;
 import java.awt.Graphics;
@@ -15,30 +16,34 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferStrategy;
+import java.util.Random;
 
 public class BrickTest extends JPanel implements KeyListener, ActionListener{
 
 	private Rectangle[] brick = new Rectangle[10];
 	private JScrollPane p;
-	private static final int BOX_WIDTH = 800; // ��ü ��
-	private static final int BOX_HEIGHT = 900; // ��ü ����
-	private float ballRadius = 13; // ���� ������
-	private float ballX = 130; // ���� �ʱ� X��ġ
-	private float ballY = BOX_HEIGHT - ballRadius; // ���� �ʱ� Y��ġ
+	private static final int BOX_WIDTH = 500; // 전체 폭
+	private static final int BOX_HEIGHT = 650; // 전체 높이
+	private float ballRadius = 13; // 공의 반지름
+	private float ballX = 250; // 공의 초기 X위치
+	private double ballY = BOX_HEIGHT - ballRadius; // 공의 초기 Y위치
 	private float ballBoxWidth = 200;
 	private float ballBoxHeight = 150;
 	private float ballBoxX = 20;
 	private float ballBoxY = BOX_HEIGHT - ballBoxHeight;
 	private float ballSpeedX = 10;
-	private float ballSpeedY = 5; // ���� Y�ӵ�
-	private JButton play; // ���۹�ư
-	private JButton stop; // ������ư
+	private float ballSpeedY = 5; // 공의 Y속도
+	private JButton play; // 시작버튼
+	private JButton stop; // 중지버튼
+	private boolean left = false;
+	private boolean right = false;
+	private boolean space = false;
 	private boolean started = false;
-	private boolean isPlay = true; // �÷����Ұ�����
+	private boolean isPlay = true; // 플레이할것인지
 	
 	public BrickTest() {
 		super();
-		setSize(800, 900);
+		setSize(500, 650);
 		setBackground(new Color(232, 180, 192));
 		addKeyListener(this);
 		setFocusable(true);
@@ -60,22 +65,26 @@ public class BrickTest extends JPanel implements KeyListener, ActionListener{
 		resetBtn.addActionListener(this);
 		add(resetBtn, BorderLayout.SOUTH);
 		*/ // former Button and JScrollPane;
-		allocateBricks();
-		Thread t = new MyThread(); // ������ ��ü ����
-		t.start(); // ������ ����
+			allocateBricks();
+			Thread t = new MyThread(); // 스레드 객체 생성
+			t.start(); // 스레드 시작	
 	}
-	
-	public void allocateBricks() {
-		for(int i = 0; i < 10; i++) {
+		
+	public void allocateBricks() { // 막대 바를 아래쪽에서부터 생
+		for(int i = 0; i<10 ; i++) {
+			Random random = new Random();
+			int rNum = random.nextInt(361);
 			if(i % 2 != 0) {
-				brick[i] = new Rectangle(70, (365 + 50*i), 140, 20);
+				brick[i] = new Rectangle(rNum, (BOX_HEIGHT - 60*i), 140, 20);
 			}
 			else {
-				brick[i] = new Rectangle(300, (365 + 50*i), 140, 20);
+				brick[i] = new Rectangle(rNum, (BOX_HEIGHT - 60*i), 140, 20);
 			}
 		}	
 	}
+	
 	public void paintComponent(Graphics g) {
+		
 		g.setColor(new Color(232, 180, 192));
 		g.fillRect(0, 0, BOX_WIDTH, BOX_HEIGHT);
 		g.setColor(Color.GREEN);
@@ -90,9 +99,9 @@ public class BrickTest extends JPanel implements KeyListener, ActionListener{
 				g.fillRect((int)brick[i].getX(), (int)brick[i].getY(), (int)brick[i].getWidth(), (int)brick[i].getHeight());
 			}
 		}		
-		g.setColor(Color.RED); // ���������� ä��
+		g.setColor(Color.RED); // 빨간색으로 채움
 		g.fillOval((int) (ballX - ballRadius), (int) (ballY - ballRadius),
-				(int) (2 * ballRadius), (int) (2 * ballRadius)); // ��
+				(int) (2 * ballRadius), (int) (2 * ballRadius)); // 원
 	}
 
 	@Override
@@ -111,7 +120,7 @@ public class BrickTest extends JPanel implements KeyListener, ActionListener{
 		}
 	}
 	class MyThread extends Thread {
-		public void run() { // �����Ͽ��� �ϴ� �۾��� ������
+		public void run() { // 수행하여야 하는 작업을 적어줌
 			while (true) {
 				if(isPlay) {
 					ballY += ballSpeedY;
@@ -122,32 +131,41 @@ public class BrickTest extends JPanel implements KeyListener, ActionListener{
 							ballSpeedY = (float)(ballSpeedY + 0.153);
 						}
 					}
-					if(ballSpeedY > 0) {                             //���ӵ� ȿ�� 5�� 0.153�� ����
+					if(ballSpeedY > 0) {                             //가속도 효과 5에 0.153이 적절
 						if(ballSpeedY > 5)                            
 							ballSpeedY = 5;
 						else
 							ballSpeedY = (float)(ballSpeedY + 0.153);
 					}
 					calBallBox();
-					if(ballY - ballRadius < 0) {  // ���� ball box�� õ�忡 ������
+					
+					if (left == true) {
+						ballX -= 2;
+					    right = false;
+					}
+					if (right == true) {
+					    ballX += 2;
+					    left = false;
+					}
+					if(ballY - ballRadius < 0) {  // 공이 ball box의 천장에 닿으면
 						ballSpeedY = -ballSpeedY;
 						ballY = ballBoxY + ballRadius;
-					} else if (ballY + ballRadius > ballBoxY + ballBoxHeight) { // ���� ball box�� �ٴڿ� ������
+					} else if (ballY + ballRadius > ballBoxY + ballBoxHeight) { // 공이 ball box의 바닥에 닿으면
 						ballSpeedY = -ballSpeedY;
 						ballY = ballBoxY + ballBoxHeight - ballRadius;
 					}
 				}
-				if (isPlay) // isPlay ������ true�̸�
-					repaint(); // �׸���.
+				if (isPlay) // isPlay 변수가 true이면
+					repaint(); // 그린다.
 				try {
-					Thread.sleep(10); // ���� �ӵ� ����
+					Thread.sleep(15); // 공의 속도 조절
 				} catch (InterruptedException ex) {
 				}
 			}
 		}
 	}
 	
-	protected void calBallBox() {// ���� �ٿ� ��Ҵ��� Ȯ��
+	protected void calBallBox() {// 공이 바에 닿았는지 확인
 		Rectangle tempBall = new Rectangle((int)(ballX - ballRadius), (int)(ballY - ballRadius), (int)(ballRadius*2), (int)(ballRadius*2));
 		int brickNum = -1;
 		//float tempBallX, tempBallY;
@@ -174,33 +192,42 @@ public class BrickTest extends JPanel implements KeyListener, ActionListener{
 			}
 		}
 		
-		
 	}
 	@Override
-	public void keyPressed(KeyEvent e) {
-		switch(e.getKeyCode()) {
-			case KeyEvent.VK_LEFT:
-				ballX -= 4;
-				this.repaint();
-				break;
-			case KeyEvent.VK_RIGHT:
-				ballX += 4;
-				this.repaint();
-				break;
-			case KeyEvent.VK_UP:
-		}
-		
-	}
+	 public void keyPressed(KeyEvent e) {
+	  int keyCode = e.getKeyCode();
+	  if (keyCode == KeyEvent.VK_LEFT) {
+	   left = true;
+	   // System.out.print("left");
+	  }
 
-	@Override
-	public void keyReleased(KeyEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
+	  if (keyCode == KeyEvent.VK_RIGHT) {
+	   right = true;
+	   // System.out.print("right");
+	  }
+	 }
+
+	 @Override
+	 public void keyReleased(KeyEvent e) {
+	  int keyCode = e.getKeyCode();
+	  if (keyCode == KeyEvent.VK_LEFT) {
+	   left = false;
+	  }
+
+	  if (keyCode == KeyEvent.VK_RIGHT) {
+	   right = false;
+	  }
+	  
+	  if (keyCode == KeyEvent.VK_SPACE)
+		  space = false;
+	 }
 
 	@Override
 	public void keyTyped(KeyEvent e) {
 		// TODO Auto-generated method stub
-		
+		int KeyCode = e.getKeyCode();
+		boolean space;
+		if (KeyCode == KeyEvent.VK_SPACE)
+			space = true;
 	}
 }
